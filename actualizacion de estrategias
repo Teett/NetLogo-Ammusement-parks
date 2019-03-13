@@ -3,7 +3,7 @@ to update-strategies
   let best-score memory-size * 100 + 1
   foreach strategies [ the-strategy ->
     let score 0
-    let week 1
+    let weeks 1
     repeat memory-size [
       set prediction predict-attendance the-strategy sublist history week (week + memory-size)
       set score score + abs (item (week - 1) history - prediction)
