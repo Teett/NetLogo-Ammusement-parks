@@ -1,0 +1,155 @@
+globals [
+  attendance        ;; the current attendance at the bar
+  history           ;; list of past values of attendance
+  home-patches      ;; agentset of green patches representing the residential area
+  funpark-patches       ;; agentset of blue patches representing the funpark area
+  crowded-patch     ;; patch where we show the "CROWDED" label
+  entrada-patches
+]
+
+turtles-own [
+  strategies      ;; list of strategies
+  best-strategy   ;; index of the current best strategy
+  attend?         ;; true if the agent currently plans to attend the bar
+  prediction      ;; current prediction of the bar attendance
+]
+
+to setup
+  clear-all
+  set-default-shape turtles "person"
+
+
+  ;; create the 'homes'
+  set home-patches patches with [pycor < -5  ]
+  ask home-patches [ set pcolor orange ]
+
+  ;; create the 'bar'
+  set funpark-patches patches with [pycor > 0]
+  ask funpark-patches [ set pcolor blue ]
+
+  ;; create the 'entrada'
+  set entrada-patches patches with [pycor < 0 and pycor > -5  ]
+  ask entrada-patches [ set pcolor yellow ]
+  
+  ;; initialize the previous attendance randomly so the agents have a history
+  ;; to work with from the start
+  set history n-values (memory-size * 2) [random 100]
+  ;; the history is twice the memory, because we need at least a memory worth of history
+  ;; for each point in memory to test how well the strategies would have worked
+
+  set attendance first history
+
+  ;; use one of the patch labels to visually indicate whether or not the
+  ;; bar is "crowded"
+  ask patch (0.75 * max-pxcor) (0.5 * max-pycor) [
+    set crowded-patch self
+    set plabel-color red
+  ]
+
+  ;; create the agents and give them random strategies
+  ;; these are the only strategies these agents will ever have though they
+  ;; can change which of this "bag of strategies" they use every tick
+  create-turtles 100 [
+    set color white
+    move-to-empty-one-of home-patches
+    set strategies n-values number-strategies [random-strategy]
+    set best-strategy first strategies
+    update-strategies
+  ]
+
+  ;; start the clock
+  reset-ticks
+end
+
+
+to go
+  ;; update the global variables
+  ask crowded-patch [ set plabel "" ]
+  ;; each agent predicts attendance at the bar and decides whether or not to go
+  ask turtles [
+    set prediction predict-attendance best-strategy sublist history 0 memory-size
+    set attend? (prediction <= overcrowding-threshold)  ;; true or false
+  ]
+  ;; depending on their decision, the agents go to the bar or stay at home
+  ask turtles [
+    ifelse attend?
+      [ move-to-empty-one-of funpark-patches
+        set attendance attendance + 1 ]
+      [ move-to-empty-one-of home-patches ]
+  ]
+
+  ;; if the bar is crowded indicate that in the view
+  set attendance count turtles-on funpark-patches
+  if attendance > overcrowding-threshold [
+    ask crowded-patch [ set plabel "CROWDED" ]
+  ]
+  ;; update the attendance history
+  ;; remove oldest attendance and prepend latest attendance
+  set history fput attendance but-last history
+  ;; the agents decide what the new best strategy is
+  ask turtles [ update-strategies ]
+  ;; advance the clock
+  tick
+end
+
+;; determines which strategy would have predicted the best results had it been used this round.
+;; the best strategy is the one that has the sum of smallest differences between the
+;; current attendance and the predicted attendance for each of the preceding
+;; weeks (going back MEMORY-SIZE weeks)
+;; this does not change the strategies at all, but it does (potentially) change the one
+;; currently being used and updates the performance of all strategies
+to update-strategies
+  ;; initialize best-score to a maximum, which is the lowest possible score
+  let best-score memory-size * 100 + 1
+  foreach strategies [ the-strategy ->
+    let score 0
+    let day 1
+    repeat memory-size [
+      set prediction predict-attendance the-strategy sublist history day (day + memory-size)
+      set score score + abs (item (day - 1) history - prediction)
+      set day day + 1
+    ]
+    if (score <= best-score) [
+      set best-score score
+      set best-strategy the-strategy
+    ]
+  ]
+end
+
+;; this reports a random strategy. a strategy is just a set of weights from -1.0 to 1.0 which
+;; determines how much emphasis is put on each previous time period when making
+;; an attendance prediction for the next time period
+to-report random-strategy
+  report n-values (memory-size + 1) [1.0 - random-float 2.0]
+end
+
+;; This reports an agent's prediction of the current attendance
+;; using a particular strategy and portion of the attendance history.
+;; More specifically, the strategy is then described by the formula
+;; p(t) = x(t - 1) * a(t - 1) + x(t - 2) * a(t -2) +..
+;;      ... + x(t - MEMORY-SIZE) * a(t - MEMORY-SIZE) + c * 100,
+;; where p(t) is the prediction at time t, x(t) is the attendance of the bar at time t,
+;; a(t) is the weight for time t, c is a constant, and MEMORY-SIZE is an external parameter.
+to-report predict-attendance [strategy subhistory]
+  ;; the first element of the strategy is the constant, c, in the prediction formula.
+  ;; one can think of it as the the agent's prediction of the bar's attendance
+  ;; in the absence of any other data
+  ;; then we multiply each week in the history by its respective weight
+  report 100 * first strategy + sum (map [ [weight week] -> weight * week ] butfirst strategy subhistory)
+end
+
+;; In this model it doesn't really matter exactly which patch
+;; a turtle is on, only whether the turtle is in the home area
+;; or the bar area.  Nonetheless, to make a nice visualization
+;; this procedure is used to ensure that we only have one
+;; turtle per patch.
+to move-to-empty-one-of [locations]  ;; turtle procedure
+  move-to one-of locations
+  while [any? other turtles-here] [
+    move-to one-of locations
+  ]
+end
+
+
+; Copyright 2007 Uri Wilensky.
+; See Info tab for full copyright and license.
