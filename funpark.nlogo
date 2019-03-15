@@ -1,8 +1,8 @@
 globals [
-  attendance        ;; asistencia        ; La asistencia actual al bar.
+  attendance        ;; asistencia        ; La asistencia actual al parque.
   history           ;; historia          ; lista de valores pasados de asistencia
   home-patches      ;; casa-parches      ; Agentes de parches verdes que representan la zona residencial.
-  funpark-patches   ;; parches-bar       ; conjunto de agentes de parches azules que representan el área de la barra
+  funpark-patches   ;; parches-parque       ; conjunto de agentes de parches azules que representan el área de la parquera
   crowded-patch     ;; parche-concurrido ; Parche donde mostramos la etiqueta "concurrido"
   entrada-patches   ;; parche-entrada    ; Parche donde está la gente que decide ir y no puede entrar por que el parque esta lleno.
 ]
@@ -10,8 +10,9 @@ globals [
 turtles-own [
   strategies      ;; estrategias       ; lista de estrategias
   best-strategy   ;; mejor estrategia  ; índice de la mejor estrategia actual
-  attend?         ;;  ¿asistir?        ; Es cierto si el agente actualmente planea asistir a la barra
-  prediction      ;;  predicción       ; predicción actual de la asistencia del bar
+  attend?         ;;  ¿asistir?        ; Es cierto si el agente actualmente planea asistir a la parquera
+  prediction      ;;  predicción       ; predicción actual de la asistencia del parque
+  turtles-cola
 ]
 
 to setup
@@ -23,7 +24,7 @@ to setup
   set home-patches patches with [pycor < -5  ]
   ask home-patches [ set pcolor orange ]
 
-  ;; create the 'bar'
+  ;; create the 'parque'
   set funpark-patches patches with [pycor > 0]
   ask funpark-patches [ set pcolor blue ]
 
@@ -35,11 +36,11 @@ to setup
    ;; trabajar desde el principio
   set history n-values (memory-size * 2) [random 100]
    ;; la historia es el doble de la memoria, porque necesitamos al menos un valor de memoria de la historia
-   ;; para cada punto en la memoria probar qué tan bien habrían funcionado las estrategias
+   ;; para cada punto en la memoria proparque qué tan bien habrían funcionado las estrategias
   set attendance first history
 
    ;; use una de las etiquetas de parche para indicar visualmente si
-   ;; el bar esta "lleno de gente"
+   ;; el parque esta "lleno de gente"
   ask patch (0.5 * max-pxcor) (0.5 * max-pycor) [
     set crowded-patch self
     set plabel-color red
@@ -68,23 +69,42 @@ end
 to go
   ;;  actualizar las variables globales
   ask crowded-patch [ set plabel "" ]
-  ;; Cada agente predice la asistencia al bar y decide si ir o no.
+  ;; Cada agente predice la asistencia al parque y decide si ir o no.
   ask turtles [
     set prediction predict-attendance best-strategy sublist history 0 memory-size
     set attend? (prediction <= overcrowding-threshold)  ;; verdadero o falso
+    set turtles-cola (turtles with [attend? = TRUE])
   ]
-  ;; Dependiendo de su decisión, los agentes van al bar o se quedan en casa.
-  ask turtles [
+  ;; Dependiendo de su decisión, los agentes van al parque o se quedan en casa.
+ ;; Se definen dos variables temporales para evaluar también el área de cola
+  let cuenta-asistentes count turtles with [attend? = TRUE]
+  let asistentes turtles with [attend? = TRUE]
+
+  ifelse cuenta-asistentes < capacidad
+  [
+  ask turtles
+  [
     ifelse attend?
-      [ move-to-empty-one-of funpark-patches
-        set attendance attendance + 1 ]
-      [ move-to-empty-one-of home-patches ]
+      [
+        move-to-empty-one-of funpark-patches
+        set attendance attendance + 1
+      ]
+      [move-to-empty-one-of home-patches]
+  ]
+  ]
+  ;; Se evaluará también que si el agente desea ir pero el parque está lleno, entonces
+  ;; pasará a la zona amarilla de cola en donde tendrá una experiencia negativa
+  ;; else del ifelse
+  [
+    ask turtles [move-to-empty-one-of entrada-patches]
   ]
 
-  ;; Si el bar está lleno indica que en la vista.
+
+
+  ;; Si el parque está lleno indica que en la vista.
   set attendance count turtles-on funpark-patches
   if attendance > overcrowding-threshold [
-    ask crowded-patch [ set plabel "CROWDED" ]
+    ask crowded-patch [ set plabel "PARQUE LLENO" ]
   ]
   ;; actualizar el historial de asistencia
   ;; eliminar la asistencia más antigua y anteponer la asistencia más reciente
@@ -131,11 +151,11 @@ end
 ;; Más específicamente, la estrategia es luego descrita por la fórmula
 ;; p (t) = x (t - 1) * a (t - 1) + x (t - 2) * a (t -2) + ..
 ;; ... + x (t - TAMAÑO DE MEMORIA) * a (t - TAMAÑO DE MEMORIA) + c * 100,
-;; donde p (t) es la predicción en el tiempo t, x (t) es la asistencia de la barra en el tiempo t,
+;; donde p (t) es la predicción en el tiempo t, x (t) es la asistencia de la parquera en el tiempo t,
 ;; a (t) es el peso para el tiempo t, c es una constante y MEMORY-SIZE es un parámetro externo.
 to-report predict-attendance [strategy subhistory]
  ;; El primer elemento de la estrategia es la constante, c, en la fórmula de predicción.
- ;; Uno puede pensar en ello como la predicción del agente de la asistencia del bar
+ ;; Uno puede pensar en ello como la predicción del agente de la asistencia del parque
  ;; en ausencia de cualquier otro dato
  ;; Luego multiplicamos cada semana en la historia por su respectivo peso.
   report 100 * first strategy + sum (map [ [weight week] -> weight * week ] butfirst strategy subhistory)
@@ -143,7 +163,7 @@ end
 
 ;; En este modelo realmente no importa exactamente qué parche
 ;; una tortuga está encendida, solo si la tortuga está en la zona de origen
-;; o la zona del bar. Sin embargo, para hacer una bonita visualización.
+;; o la zona del parque. Sin emparquego, para hacer una bonita visualización.
 ;; Este procedimiento se utiliza para garantizar que solo tenemos uno.
 ;; tortuga por parche.
 to move-to-empty-one-of [locations]  ;; procedimiento de tortuga
@@ -182,9 +202,9 @@ ticks
 
 BUTTON
 170
-220
+295
 233
-253
+328
 go
 go
 T
@@ -198,10 +218,10 @@ NIL
 0
 
 BUTTON
-40
-218
-106
-251
+30
+290
+96
+323
 setup
 setup
 NIL
@@ -215,10 +235,10 @@ NIL
 1
 
 SLIDER
-41
-37
-231
-70
+31
+34
+221
+67
 memory-size
 memory-size
 1
@@ -230,10 +250,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-41
-72
-231
-105
+31
+69
+221
+102
 number-strategies
 number-strategies
 1
@@ -264,10 +284,10 @@ PENS
 "threshold" 1.0 0 -2674135 true "" ";; plot a threshold line -- an attendance level above this line makes the bar\n;; is unappealing, but below this line is appealing\nplot-pen-reset\nplotxy 0 overcrowding-threshold\nplotxy plot-x-max overcrowding-threshold"
 
 SLIDER
-41
-107
-231
-140
+31
+104
+221
+137
 overcrowding-threshold
 overcrowding-threshold
 0
@@ -279,16 +299,31 @@ NIL
 HORIZONTAL
 
 SLIDER
-65
-155
-237
-188
+30
+147
+225
+180
 poblacion
 poblacion
 0
 1000
 100.0
 100
+1
+NIL
+HORIZONTAL
+
+SLIDER
+30
+197
+202
+230
+capacidad
+capacidad
+0
+1000
+500.0
+25
 1
 NIL
 HORIZONTAL
