@@ -80,32 +80,34 @@ to go
   let cuenta-asistentes count turtles with [attend? = TRUE]
   let asistentes turtles with [attend? = TRUE]
 
-  ifelse cuenta-asistentes < capacidad
-  [
-  ask turtles
-  [
+  
+      
+  	ask turtles
+  	[
     ifelse attend?
       [
         move-to-empty-one-of funpark-patches
         set attendance attendance + 1
       ]
       [move-to-empty-one-of home-patches]
-  ]
-  ]
+  	]
   ;; Se evaluará también que si el agente desea ir pero el parque está lleno, entonces
   ;; pasará a la zona amarilla de cola en donde tendrá una experiencia negativa
   ;; else del ifelse
-  [
-    ask turtles [move-to-empty-one-of entrada-patches]
-  ]
+
 
 
 
   ;; Si el parque está lleno indica que en la vista.
   set attendance count turtles-on funpark-patches
-  if attendance > overcrowding-threshold [
+  if attendance > overcrowding-threshold 
+  [
     ask crowded-patch [ set plabel "PARQUE LLENO" ]
+    let diferencia attendance - overcrowding-threshold
+    let olvidados n-of diferencia turtles-on funpark-patches
+    ask olvidados [move-to-empty-one-of entrada-patches]
   ]
+
   ;; actualizar el historial de asistencia
   ;; eliminar la asistencia más antigua y anteponer la asistencia más reciente
   set history fput attendance but-last history
@@ -176,11 +178,11 @@ end
 GRAPHICS-WINDOW
 410
 35
-838
-464
+830
+455
 -1
 -1
-12.0
+12
 1
 24
 1
@@ -198,7 +200,7 @@ GRAPHICS-WINDOW
 1
 1
 ticks
-30.0
+30
 
 BUTTON
 170
@@ -207,7 +209,7 @@ BUTTON
 328
 go
 go
-T
+NIL
 1
 T
 OBSERVER
@@ -243,7 +245,7 @@ memory-size
 memory-size
 1
 10
-5.0
+5
 1
 1
 NIL
@@ -258,7 +260,7 @@ number-strategies
 number-strategies
 1
 20
-10.0
+10
 1
 1
 NIL
@@ -272,16 +274,16 @@ PLOT
 Bar Attendance
 Time
 Attendance
-0.0
-10.0
-0.0
-100.0
+0
+10
+0
+100
 true
 false
 "" ""
 PENS
-"attendance" 1.0 0 -16777216 true "" "plot attendance"
-"threshold" 1.0 0 -2674135 true "" ";; plot a threshold line -- an attendance level above this line makes the bar\n;; is unappealing, but below this line is appealing\nplot-pen-reset\nplotxy 0 overcrowding-threshold\nplotxy plot-x-max overcrowding-threshold"
+"attendance" 1 0 -16777216 true "" "plot attendance"
+"threshold" 1 0 -2674135 true "" ";; plot a threshold line -- an attendance level above this line makes the bar\n;; is unappealing, but below this line is appealing\nplot-pen-reset\nplotxy 0 overcrowding-threshold\nplotxy plot-x-max overcrowding-threshold"
 
 SLIDER
 31
@@ -292,7 +294,7 @@ overcrowding-threshold
 overcrowding-threshold
 0
 100
-60.0
+60
 1
 1
 NIL
@@ -307,7 +309,7 @@ poblacion
 poblacion
 0
 1000
-100.0
+100
 100
 1
 NIL
@@ -322,12 +324,11 @@ capacidad
 capacidad
 0
 1000
-500.0
+500
 25
 1
 NIL
 HORIZONTAL
-
 @#$#@#$#@
 ## ACKNOWLEDGMENT
 
@@ -719,22 +720,22 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.4
+NetLogo 6.0.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
 default
-0.0
--0.2 0 0.0 1.0
-0.0 1 1.0 0.0
-0.2 0 0.0 1.0
+0
+-0.2 0 0 1
+0 1 1 0
+0.2 0 0 1
 link direction
 true
 0
 Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 @#$#@#$#@
-1
+
 @#$#@#$#@
