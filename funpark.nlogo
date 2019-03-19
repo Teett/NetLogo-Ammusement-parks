@@ -77,10 +77,6 @@ to go
   ]
   ;; Dependiendo de su decisión, los agentes van al parque o se quedan en casa.
  ;; Se definen dos variables temporales para evaluar también el área de cola
-  let cuenta-asistentes count turtles with [attend? = TRUE]
-  let asistentes turtles with [attend? = TRUE]
-
-  
       
   	ask turtles
   	[
@@ -91,14 +87,11 @@ to go
       ]
       [move-to-empty-one-of home-patches]
   	]
-  ;; Se evaluará también que si el agente desea ir pero el parque está lleno, entonces
-  ;; pasará a la zona amarilla de cola en donde tendrá una experiencia negativa
-  ;; else del ifelse
-
-
-
 
   ;; Si el parque está lleno indica que en la vista.
+  ;; Se evaluará también que si el agente desea ir pero el parque está lleno, entonces
+  ;; pasará a la zona amarilla de cola en donde tendrá una experiencia negativa
+  ;; olvidados es una variable temporal que tiene las personas que no lograron ingresar al parque adecuadamente
   set attendance count turtles-on funpark-patches
   if attendance > overcrowding-threshold 
   [
