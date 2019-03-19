@@ -77,7 +77,7 @@ to go
   ]
   ;; Dependiendo de su decisión, los agentes van al parque o se quedan en casa.
  ;; Se definen dos variables temporales para evaluar también el área de cola
-      
+
   	ask turtles
   	[
     ifelse attend?
@@ -93,7 +93,7 @@ to go
   ;; pasará a la zona amarilla de cola en donde tendrá una experiencia negativa
   ;; olvidados es una variable temporal que tiene las personas que no lograron ingresar al parque adecuadamente
   set attendance count turtles-on funpark-patches
-  if attendance > overcrowding-threshold 
+  if attendance > overcrowding-threshold
   [
     ask crowded-patch [ set plabel "PARQUE LLENO" ]
     let diferencia attendance - overcrowding-threshold
@@ -171,11 +171,11 @@ end
 GRAPHICS-WINDOW
 410
 35
-830
-455
+838
+464
 -1
 -1
-12
+12.0
 1
 24
 1
@@ -193,7 +193,7 @@ GRAPHICS-WINDOW
 1
 1
 ticks
-30
+30.0
 
 BUTTON
 170
@@ -238,7 +238,7 @@ memory-size
 memory-size
 1
 10
-5
+5.0
 1
 1
 NIL
@@ -253,7 +253,7 @@ number-strategies
 number-strategies
 1
 20
-10
+10.0
 1
 1
 NIL
@@ -267,16 +267,16 @@ PLOT
 Bar Attendance
 Time
 Attendance
-0
-10
-0
-100
+0.0
+10.0
+0.0
+100.0
 true
 false
 "" ""
 PENS
-"attendance" 1 0 -16777216 true "" "plot attendance"
-"threshold" 1 0 -2674135 true "" ";; plot a threshold line -- an attendance level above this line makes the bar\n;; is unappealing, but below this line is appealing\nplot-pen-reset\nplotxy 0 overcrowding-threshold\nplotxy plot-x-max overcrowding-threshold"
+"attendance" 1.0 0 -16777216 true "" "plot attendance"
+"threshold" 1.0 0 -2674135 true "" ";; plot a threshold line -- an attendance level above this line makes the bar\n;; is unappealing, but below this line is appealing\nplot-pen-reset\nplotxy 0 overcrowding-threshold\nplotxy plot-x-max overcrowding-threshold"
 
 SLIDER
 31
@@ -287,7 +287,7 @@ overcrowding-threshold
 overcrowding-threshold
 0
 100
-60
+60.0
 1
 1
 NIL
@@ -302,7 +302,7 @@ poblacion
 poblacion
 0
 1000
-100
+100.0
 100
 1
 NIL
@@ -317,29 +317,26 @@ capacidad
 capacidad
 0
 1000
-500
+500.0
 25
 1
 NIL
 HORIZONTAL
+
 @#$#@#$#@
 ## ACKNOWLEDGMENT
 
-This model is from Chapter Three of the book "Introduction to Agent-Based Modeling: Modeling Natural, Social and Engineered Complex Systems with NetLogo", by Uri Wilensky & William Rand.
+This model is made for educational purposes and is based on "Introduction to Agent-Based Modeling: Modeling Natural, Social and Engineered Complex Systems with NetLogo", by Uri Wilensky & William Rand.
 
 * Wilensky, U. & Rand, W. (2015). Introduction to Agent-Based Modeling: Modeling Natural, Social and Engineered Complex Systems with NetLogo. Cambridge, MA. MIT Press.
 
-This model is in the IABM Textbook folder of the NetLogo Models Library. The model, as well as any updates to the model, can also be found on the textbook website: http://www.intro-to-abm.com/.
-
 ## WHAT IS IT?
 
-El Farol is a bar in Santa Fe, New Mexico.  The bar is popular --- especially on Thursday nights when they offer Irish music --- but sometimes becomes overcrowded and unpleasant. In fact, if the patrons of the bar think it will be overcrowded they stay home; otherwise they go enjoy themselves at El Farol.  This model explores what happens to the overall attendance at the bar on these popular Thursday evenings, as the patrons use different strategies for determining how crowded they think the bar will be.
-
-El Farol was originally put forth by Brian Arthur (1994) as an example of how one might model economic systems of boundedly rational agents who use inductive reasoning.
-
-This is a version of the El Farol model in the Social Science Section of the NetLogo Models Library. This version is intended for use with the IABM textbook. It is NOT intended for textbook users to understand all the code in this model as the point in this section of the textbook is to extend the model by adding new output measures to the model, and not to alter the fundamental algorithm of the model.
+description to be done
 
 ## HOW IT WORKS
+
+El Farol text is here. Need to replace it.
 
 An agent will go to the bar on Thursday night if they think that there will not be more than a certain number of people there --- a number given by the OVERCROWDING-THRESHOLD.  To predict the attendance for any given week, each agent has access to a set of prediction strategies and the actual attendance figures of the bar from previous Thursdays.  A prediction strategy is represented as a list of weights that determines how the agent believes that each time period of the historical data affects the attendance prediction for the current week.  One of these weights (the first one) is a constant term which allows the baseline of the prediction to be modified.  This definition of a strategy is based on an implementation of Arthur's model as revised by David Fogel et al. (1999).  The agent decides which one of its strategies to use by determining which one would have done the best had they used it in the preceding weeks.
 
@@ -349,47 +346,12 @@ The number of potential strategies an agent has is given by NUMBER-STRATEGIES, a
 
 ## HOW TO USE IT
 
-The NUMBER-STRATEGIES slider controls how many strategies each agent keeps in its memory. The OVERCROWDING-THRESHOLD slider controls when the bar is considered overcrowded. The MEMORY slider controls how far back, in the history of attendance, agents remember. To run the model, set the NUMBER-STRATEGIES, OVERCROWDING-THRESHOLD and MEMORY size, press SETUP, and then GO.
+Description yet to be provided.
 
-The BAR ATTENDANCE plot shows the average attendance at the bar over time.
-
-## THINGS TO NOTICE
-
-The green part of the world represents the homes of the patrons, while the blue part of the world represents the El Farol Bar.  Over time the attendance will increase and decrease but its mean value comes close to the OVERCROWDING-THRESHOLD.
 
 ## THINGS TO TRY
 
 Try running the model with different settings for MEMORY-SIZE and NUMBER-STRATEGIES.  What happens to the variability in attendance as you decrease NUMBER-STRATEGIES?  What happens to the variability in the plot if you decrease MEMORY-SIZE?
-
-## EXTENDING THE MODEL
-
-Currently the weights that determine each strategy are randomly generated during the model setup.  Try altering the weights that are possible during setup so that they only reflect a mix of the following agent strategies:
-- always predict the same as last week's attendance
-- an average of the last several week's attendance
-- the same as 2 weeks ago
-Can you think of other simple rules one might follow?
-
-At the end of Arthur's original paper, he mentions that though he uses a simple learning technique (the "bag of strategies" method that we use here) almost any other kind of machine learning technique would achieve the same results.  This method is particularly limiting in that the strategies an agent is given during the setup are all the strategies they have for the entire run of the model.  Most other machine learning methods would enable the agents to change their strategies over time.  In fact Fogel et al. (1999) implemented a genetic algorithm and got somewhat different results.  Try implementing another machine learning technique and see what the results are.
-
-Can you think of a better way to measure the success of strategies and calculate the best-strategy?
-
-## NETLOGO FEATURES
-
-Lists are used to represent strategies and attendance histories.
-
-`n-values` is useful for generating random strategies.
-
-## RELATED MODELS
-
-Arthur's original model has been generalized as the Minority Game and is included in the Social Sciences section of the NetLogo models library.
-
-Wilensky, U. (2004).  NetLogo Minority Game model.  http://ccl.northwestern.edu/netlogo/models/MinorityGame.  Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.
-
-There is also a participatory simulation version of the Minority Game model in the models library.
-
-Stouffer, D. & Wilensky, U. (2004). NetLogo Minority Game HubNet model. http://ccl.northwestern.edu/netlogo/models/MinorityGameHubNet. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.
-
-There is an alternative implementation of this model with more parameters that is part of the NetLogo User Community Models.
 
 ## CREDITS AND REFERENCES
 
@@ -397,39 +359,21 @@ This model is adapted from:
 
 Rand, W. and Wilensky, U. (1997). NetLogo El Farol model. http://ccl.northwestern.edu/netlogo/models/ElFarol. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.
 
-This model is inspired by a paper by W. Brian Arthur. "Inductive Reasoning and Bounded Rationality", W. Brian Arthur, The American Economic Review, 1994, v84n2, p406-411.
-
-David Fogel et al. also built a version of this model using a genetic algorithm.  "Inductive reasoning and bounded rationality reconsidered", Fogel, D.B.; Chellapilla, K.; Angeline, P.J., IEEE Transactions on Evolutionary Computation, 1999, v3n2, p142-146.
-
 ## HOW TO CITE
 
-This model is part of the textbook, “Introduction to Agent-Based Modeling: Modeling Natural, Social and Engineered Complex Systems with NetLogo.”
+Please cite this model as:
 
-If you mention this model or the NetLogo software in a publication, we ask that you include the citations below.
-
-For the model itself:
-
-* Rand, W., Wilensky, U. (2007).  NetLogo El Farol model.  http://ccl.northwestern.edu/netlogo/models/ElFarol.  Center for Connected Learning and Computer-Based Modeling, Northwestern Institute on Complex Systems, Northwestern University, Evanston, IL.
-
-Please cite the NetLogo software as:
-
-* Wilensky, U. (1999). NetLogo. http://ccl.northwestern.edu/netlogo/. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.
-
-Please cite the textbook as:
-
-* Wilensky, U. & Rand, W. (2015). Introduction to Agent-Based Modeling: Modeling Natural, Social and Engineered Complex Systems with NetLogo. Cambridge, MA. MIT Press.
+To be determined.
 
 ## COPYRIGHT AND LICENSE
 
-Copyright 2007 Uri Wilensky.
+Copyright 2019 Daniel Chavarría, et al.
 
 ![CC BY-NC-SA 3.0](http://ccl.northwestern.edu/images/creativecommons/byncsa.png)
 
 This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 3.0 License.  To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/3.0/ or send a letter to Creative Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
 
-Commercial licenses are also available. To inquire about commercial licenses, please contact Uri Wilensky at uri@northwestern.edu.
-
-<!-- 2007 Cite: Rand, W., Wilensky, U. -->
+Commercial licenses are also available. To inquire about commercial licenses, please contact Daniel Chavarría at ldchavarriam@unal.edu.co
 @#$#@#$#@
 default
 true
@@ -713,22 +657,22 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.0.2
+NetLogo 6.0.4
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
 default
-0
--0.2 0 0 1
-0 1 1 0
-0.2 0 0 1
+0.0
+-0.2 0 0.0 1.0
+0.0 1 1.0 0.0
+0.2 0 0.0 1.0
 link direction
 true
 0
 Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 @#$#@#$#@
-
+0
 @#$#@#$#@
