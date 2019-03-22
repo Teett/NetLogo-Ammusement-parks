@@ -2,17 +2,20 @@ globals [
   attendance        ;; asistencia        ; La asistencia actual al parque.
   history           ;; historia          ; lista de valores pasados de asistencia
   home-patches      ;; casa-parches      ; Agentes de parches verdes que representan la zona residencial.
-  funpark-patches   ;; parches-parque       ; conjunto de agentes de parches azules que representan el área de la parquera
+  funpark-patches   ;; parches-parque    ; conjunto de agentes de parches azules que representan el área de la parquera
   crowded-patch     ;; parche-concurrido ; Parche donde mostramos la etiqueta "concurrido"
   entrada-patches   ;; parche-entrada    ; Parche donde está la gente que decide ir y no puede entrar por que el parque esta lleno.
+
 ]
 
+
 turtles-own [
+  dinero         ;; dinero con que ingresa cada persona
   strategies      ;; estrategias       ; lista de estrategias
   best-strategy   ;; mejor estrategia  ; índice de la mejor estrategia actual
   attend?         ;;  ¿asistir?        ; Es cierto si el agente actualmente planea asistir a la parquera
   prediction      ;;  predicción       ; predicción actual de la asistencia del parque
-  turtles-cola
+
 ]
 
 to setup
@@ -43,23 +46,25 @@ to setup
    ;; el parque esta "lleno de gente"
   ask patch (0.5 * max-pxcor) (0.5 * max-pycor) [
     set crowded-patch self
-    set plabel-color red
-  ]
+    set plabel-color red   ]
 
    ;; Crea los agentes y dales estrategias al azar.
    ;; Estas son las únicas estrategias que tendrán estos agentes, aunque
    ;; Pueden cambiar cual de estas "bolsas de estrategias" usan cada tick.
-  create-turtles poblacion [
-    set color white
+  create-turtles poblacion
+  [ set color white
     move-to-empty-one-of home-patches
     set strategies n-values number-strategies [random-strategy]
     set best-strategy first strategies
-    update-strategies
-  ]
+    update-strategies  ]
+
+  ;; la mitad de población es negra y la otra sigue blanca
   ask n-of (poblacion / 2) turtles ;la mitad de la poblacion cambio el color a negro
-  [
-    set color black
-  ]
+  [ set color black ]
+
+  ;; cada persona nace con un dinero aleatorio
+  ask turtles
+    [ set dinero random 100 ]
 
    ;; iniciar el reloj
   reset-ticks
@@ -72,19 +77,17 @@ to go
   ;; Cada agente predice la asistencia al parque y decide si ir o no.
   ask turtles [
     set prediction predict-attendance best-strategy sublist history 0 memory-size
-    set attend? (prediction <= overcrowding-threshold)  ;; verdadero o falso
-    set turtles-cola (turtles with [attend? = TRUE])
+    set attend? (prediction <= overcrowding-threshold and dinero > 10)  ;; verdadero o falso
   ]
+
   ;; Dependiendo de su decisión, los agentes van al parque o se quedan en casa.
  ;; Se definen dos variables temporales para evaluar también el área de cola
 
   	ask turtles
   	[
     ifelse attend?
-      [
-        move-to-empty-one-of funpark-patches
-        set attendance attendance + 1
-      ]
+      [ move-to-empty-one-of funpark-patches
+        set attendance attendance + 1   ]
       [move-to-empty-one-of home-patches]
   	]
 
@@ -94,12 +97,24 @@ to go
   ;; olvidados es una variable temporal que tiene las personas que no lograron ingresar al parque adecuadamente
   set attendance count turtles-on funpark-patches
   if attendance > overcrowding-threshold
-  [
-    ask crowded-patch [ set plabel "PARQUE LLENO" ]
+  [ ask crowded-patch [ set plabel "PARQUE LLENO" ]
     let diferencia attendance - overcrowding-threshold
     let olvidados n-of diferencia turtles-on funpark-patches
     ask olvidados [move-to-empty-one-of entrada-patches]
   ]
+
+
+
+  ;; las personas que estén en el parche azul les quitan 10 de dinero
+  ask turtles
+  [if pcolor = blue  [ set dinero dinero - 10 ] ]
+
+
+
+  ask turtles
+  [if ticks mod 7 = 0 [set dinero dinero + 20 ] ]
+
+
 
   ;; actualizar el historial de asistencia
   ;; eliminar la asistencia más antigua y anteponer la asistencia más reciente
@@ -238,7 +253,7 @@ memory-size
 memory-size
 1
 10
-5.0
+7.0
 1
 1
 NIL
@@ -287,7 +302,7 @@ overcrowding-threshold
 overcrowding-threshold
 0
 100
-60.0
+40.0
 1
 1
 NIL
@@ -317,7 +332,7 @@ capacidad
 capacidad
 0
 1000
-500.0
+50.0
 25
 1
 NIL
