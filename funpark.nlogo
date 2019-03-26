@@ -82,7 +82,6 @@ to go
 
   ;; Dependiendo de su decisión, los agentes van al parque o se quedan en casa.
  ;; Se definen dos variables temporales para evaluar también el área de cola
-
   	ask turtles
   	[
     ifelse attend?
@@ -95,6 +94,7 @@ to go
   ;; Se evaluará también que si el agente desea ir pero el parque está lleno, entonces
   ;; pasará a la zona amarilla de cola en donde tendrá una experiencia negativa
   ;; olvidados es una variable temporal que tiene las personas que no lograron ingresar al parque adecuadamente
+
   set attendance count turtles-on funpark-patches
   if attendance > overcrowding-threshold
   [ ask crowded-patch [ set plabel "PARQUE LLENO" ]
@@ -103,17 +103,16 @@ to go
     ask olvidados [move-to-empty-one-of entrada-patches]
   ]
 
-
-
   ;; las personas que estén en el parche azul les quitan 10 de dinero
   ask turtles
-  [if pcolor = blue  [ set dinero dinero - 10 ] ]
+  [if pcolor = blue  [ set dinero dinero - costo-entrada ] ]
 
-
-
-  ask turtles
-  [if ticks mod 7 = 0 [set dinero dinero + 20 ] ]
-
+;; Adición del descuento
+ask turtles
+  [if ticks mod 7 = 0 and pcolor = blue [set dinero dinero + costo-entrada * (1 - (porcentaje-descuento / 100)) ]]
+;; Adición de dinero quincenal
+ask turtles
+  [if ticks mod 15 = 0 [set dinero dinero + dinero-quincenal ] ]
 
 
   ;; actualizar el historial de asistencia
@@ -184,10 +183,10 @@ to move-to-empty-one-of [locations]  ;; procedimiento de tortuga
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-410
-35
-838
-464
+243
+17
+671
+446
 -1
 -1
 12.0
@@ -211,13 +210,13 @@ ticks
 30.0
 
 BUTTON
-170
-295
-233
-328
+160
+358
+223
+391
 go
 go
-NIL
+T
 1
 T
 OBSERVER
@@ -229,9 +228,9 @@ NIL
 
 BUTTON
 30
-290
+358
 96
-323
+391
 setup
 setup
 NIL
@@ -252,8 +251,8 @@ SLIDER
 memory-size
 memory-size
 1
-10
-7.0
+20
+5.0
 1
 1
 NIL
@@ -275,13 +274,13 @@ NIL
 HORIZONTAL
 
 PLOT
-25
-355
-299
-567
-Bar Attendance
-Time
-Attendance
+689
+27
+1129
+239
+Pretensión de asistencia
+Tiempo
+Asistencia
 0.0
 10.0
 0.0
@@ -301,6 +300,70 @@ SLIDER
 overcrowding-threshold
 overcrowding-threshold
 0
+200
+80.0
+10
+1
+NIL
+HORIZONTAL
+
+SLIDER
+30
+147
+221
+180
+poblacion
+poblacion
+0
+200
+100.0
+10
+1
+NIL
+HORIZONTAL
+
+PLOT
+690
+261
+1131
+440
+Personas en cola
+Tiempo
+Personas en cola
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count turtles-on entrada-patches"
+"pen-1" 1.0 0 -5298144 true "" "plot-pen-reset\nplotxy 0 overcrowding-threshold\nplotxy plot-x-max overcrowding-threshold"
+
+SLIDER
+28
+190
+219
+223
+costo-entrada
+costo-entrada
+0
+40
+10.0
+2.5
+1
+NIL
+HORIZONTAL
+
+SLIDER
+29
+232
+219
+265
+dinero-quincenal
+dinero-quincenal
+0
 100
 40.0
 1
@@ -309,31 +372,16 @@ NIL
 HORIZONTAL
 
 SLIDER
-30
-147
-225
-180
-poblacion
-poblacion
+29
+275
+219
+308
+porcentaje-descuento
+porcentaje-descuento
 0
-1000
-100.0
 100
-1
-NIL
-HORIZONTAL
-
-SLIDER
-30
-197
-202
-230
-capacidad
-capacidad
-0
-1000
 50.0
-25
+1
 1
 NIL
 HORIZONTAL
@@ -347,38 +395,35 @@ This model is made for educational purposes and is based on "Introduction to Age
 
 ## WHAT IS IT?
 
-description to be done
+Funpark es un parque de diversiones el cual está presentando una baja asistencia los días previos al pago de quincena, por esta razón la administración del parque quiere implementar una estrategia de descuento cada 7 días para incentivar la asistencia.
+
+El modelo muestra como es el comportamiento de las personas que quieren asistir a el parque de diversiones teniendo en cuenta la cantidad de asistencias pasadas, esto con el fin de que la estadía sea lo más amena posible ya que cuando el parque se llena, la estadía se hace desagradable, además si las personas quieren asistir al parque y este se encuentra lleno no se les permite el ingreso quedándose en las taquillas del parque.
+
+El costo de entrada al parque es de 10 unidades monetarias por lo que si los agentes no poseen dicha cantidad no intentaran ir al parque, los agentes reciben cada 15 días la cantidad de 40 unidades monetarias haciendo énfasis en el pago quincenal de las personas.
+
+Funpark basa y adapta sus estrategias de predicción para los agentes en la propuesta por (Arthur, 1994) en su modelo de El Farol y también utiliza la implementación de Aprendizaje autónomo implementada por (Rand & Wilensky, 2007) en Netlogo para este mismo modelo. Funpark añade elementos importantes y múltiples restricciones, principalmente las mencionadas en relación con el dinero y los descuentos.
+
 
 ## HOW IT WORKS
 
-El Farol text is here. Need to replace it.
 
-An agent will go to the bar on Thursday night if they think that there will not be more than a certain number of people there --- a number given by the OVERCROWDING-THRESHOLD.  To predict the attendance for any given week, each agent has access to a set of prediction strategies and the actual attendance figures of the bar from previous Thursdays.  A prediction strategy is represented as a list of weights that determines how the agent believes that each time period of the historical data affects the attendance prediction for the current week.  One of these weights (the first one) is a constant term which allows the baseline of the prediction to be modified.  This definition of a strategy is based on an implementation of Arthur's model as revised by David Fogel et al. (1999).  The agent decides which one of its strategies to use by determining which one would have done the best had they used it in the preceding weeks.
+Para las predicciones se utilizó la ecuación de aprendizaje autónomo propuesta por (Rand & Wilensky, 2007) la cual se detalla a continuación: 
 
-Interestingly, the optimal strategy from a perfectly rational point-of-view would be to always go to the bar since you are not punished for going when it is crowded, but in Arthur's model agents are not optimizing attending when not crowded, instead they are optimizing their prediction of the attendance.
+P(t) = x(t - 1)*a(t - 1) + x(t - 2)*a(t -2) + ... + x(t - MEMORY)*a(t - MEMORY) + c * 100
 
-The number of potential strategies an agent has is given by NUMBER-STRATEGIES, and these potential strategies are distributed randomly to the agents during SETUP. As the model runs, at any one tick each agent will only utilize one strategy, based on its previous ability to predict the attendance at the bar.  In this version of the El Farol model, agents are given strategies and do not change them once they have them, however since they can change their strategies at any time based on performance, the ecology of strategies being used by the whole population changes over time.  The length of the attendance history the agents can use for a prediction or evaluation of a strategy is given by MEMORY-SIZE.  This evaluation of performance is carried out in UPDATE-STRATEGIES, which does not change the strategies, but rather updates the performance of each strategy by testing it, and then selecting the strategy that has the best performance given the current data.  In order to test each strategy its performance on MEMORY-SIZE past days is computed.  To make this work, the model actually records twice the MEMORY-SIZE historical data so that a strategy can be tested MEMORY-SIZE days into the past still using the full MEMORY-SIZE data to make its prediction.
 
 ## HOW TO USE IT
+En la parte izquierda de la interfaz del modelo (Figura 1) se encuentran los parámetros de entrada modificables mediante deslizadores. En el área central se encuentra la interfaz gráfica del modelo: El color azul representa el área del parque de diversiones y las personas que ingresan han pagado un costo de entrada; el color amarillo representa a los agentes que no lograron acceder al parque debido a la capacidad definida en los parámetros y se consideran en cola o con una experiencia no tan agradable.
 
-Description yet to be provided.
+En el área derecha hay dos gráficas, en las que se puede visualizar la cantidad de personas que tienen como objetivo asistir al parque y la cantidad de personas que quedan “en cola” por el sobrepaso de la capacidad del parque definida.
 
 
-## THINGS TO TRY
-
-Try running the model with different settings for MEMORY-SIZE and NUMBER-STRATEGIES.  What happens to the variability in attendance as you decrease NUMBER-STRATEGIES?  What happens to the variability in the plot if you decrease MEMORY-SIZE?
 
 ## CREDITS AND REFERENCES
 
 This model is adapted from:
 
 Rand, W. and Wilensky, U. (1997). NetLogo El Farol model. http://ccl.northwestern.edu/netlogo/models/ElFarol. Center for Connected Learning and Computer-Based Modeling, Northwestern University, Evanston, IL.
-
-## HOW TO CITE
-
-Please cite this model as:
-
-To be determined.
 
 ## COPYRIGHT AND LICENSE
 
